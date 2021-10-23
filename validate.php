@@ -19,7 +19,13 @@ function nameValidation($s, $who) {
             $_SESSION[$who] = "NAME - Incorrect format!";
             return;
         }
-      
+        else if ($s[$i] == ' ') $f++;
+        else if ($s[$i] >= 'A' and $s[$i] <= 'Z') continue;
+        else if ($s[$i] >= 'a' and $s[$i] <= 'z') continue;
+        else if ($s[$i] != '-' and $s[$i] != '.') {
+            $g = -1;
+            break;
+        }
     }
     if ($g == 1) {
         if ($x == 1) {
@@ -72,7 +78,12 @@ function passwordValidation($s, $who) {
     $c = 0;
     $n = 0;
     $m = 0;
-   
+    for ($i = 0; $i < strlen($s); $i++) {
+        if ($s[$i] >= 'a' and $s[$i] <= 'z') $c = 1;
+        else if ($s[$i] >= 'A' and $s[$i] <= 'Z') $c = 1;
+        else if ($s[$i] >= '1' and $s[$i] <= '9') $n = 1;
+        else if ($s[$i] == '@' or $s[$i] == '#' or $s[$i] == '$' or $s[$i] == '%') $m++;
+    }
     if ($m == 0) {
         $_SESSION[$who] .= ('\n'."PASSWORD - Must contain atleast one speacial character. (@ # $ %)");
     }
@@ -127,7 +138,10 @@ if (isset($_POST['LGSubmit'])) {
         // searching in reviwer table
         $result = mysqli_query($con, $q1);
         if (mysqli_num_rows($result) > 0) {
-            
+            $_flag = "reviewer";
+            $row   = mysqli_fetch_array($result, MYSQLI_ASSOC);
+            $q3    = "SELECT COUNT(*) FROM reviews WHERE rev_username = '".$row['rev_username']."' and approval = 'Y'";
+            $res   = mysqli_query($con, $q3);
             $haha  = mysqli_fetch_array($res, MYSQLI_ASSOC);
             $_SESSION['review_count'] = $haha['COUNT(*)'];
         } else {
@@ -161,7 +175,15 @@ if (isset($_POST['LGSubmit'])) {
         } else {
             if ($row['valid'] == 'Y') {
                       // SET SESSION
-                
+                $_SESSION['name']      = $row["name"];
+                $_SESSION['username']  = $row["rev_username"];
+                $_SESSION['email']     = $row["email"];
+                $_SESSION['password']  = $row["password"];
+                $_SESSION['follower']  = $row["follower"];
+                $_SESSION['following'] = $row["following"];
+                $_SESSION['points']    = $row["points"];
+                $_SESSION['pic']       = $row["picture"];
+                $_SESSION['dob']       = $row['dob'];
                 $_SESSION['loggedIn']  = 1;
                 $_SESSION['success']   = "done";
                 // SET COOKIE
@@ -221,7 +243,7 @@ if (isset($_POST['LGSubmit'])) {
             }
         }
     } else {
-        
+        $_SESSION['success'] = "failed";
         header("location: login.php");
     }
 }
@@ -274,7 +296,7 @@ if (isset($_POST['SDVerf'])) {
             $_SESSION['f_success'] = "GO";
             header("location: forgot.php?q=GO");
         } else {
-           
+            $_SESSION['f_success'] = "shit";
             header("location: forgot.php");
         }
     } else {
@@ -315,7 +337,11 @@ if (isset($_POST['RVSignUp'])) {
     $_POST['Fname'] = trim($_POST['Fname'], " ");
     $_POST['Lname'] = trim($_POST['Lname'], " ");
     // Validation
-    
+    nameValidation($_POST['Fname']." ".$_POST['Lname'], "RVproblem");
+    dobValidation($_POST['BirthDay'], $_POST['BirthMonth'], $_POST['BirthYear'], "RVproblem");
+    emailValidation($_POST['email'], "RVproblem");
+    passwordValidation($_POST['password'], "RVproblem");
+    if ($_SESSION['RVproblem'] != "") {
         header("location: rev_reg.php");
     } else {
         // Estabilishing connection to database
@@ -371,7 +397,13 @@ if (isset($_POST['RSSignUp'])) {
                 header("location: res_reg.php");
             } else {
 
-                
+                $q1  = "SELECT location_id FROM restaurants";
+                $res = mysqli_query($con, $q1);
+                $LID = -1;
+                for ($i = 0; $i < mysqli_num_rows($res); $i++) {
+                    $ans[$i] = mysqli_fetch_array($res);
+                    $LID = max($LID, $ans[$i]['location_id']);
+                }
                 $LID += 1;
 
                 $qX  = "INSERT INTO `restaurants` (`name`, `manager_name`, `email`, `password`, `location_id`) VALUES ('".$_POST['Rname']."', '".$_POST['m_name']."', '".$_POST['email']."', '".$_POST['password']."', '".$LID."');";
@@ -655,7 +687,13 @@ if (isset($_REQUEST['q'])) {
             if (mysqli_num_rows($res) > 0) {
                 for ($i = 0; $i < mysqli_num_rows($res); $i++) {
                     $row[$i] = mysqli_fetch_array($res);
-                    
+                    // Setting color for rating
+                    if ($row[$i]['rating'] == "GOOD") $col = "green";
+                    else if ($row[$i]['rating'] == "AVERAGE") $col = "orange";
+                    else $col = "red";
+                    // Print review
+                    echo "<h3>".$row[$i]['restaurant']."&nbsp; &nbsp;<small style='font-size: 13px;'>".$row[$i]['date']."</small></h3>"."<h4 style='margin-top: -15;'>Review: <small style='font-size: 20px; color: ".$col."'>".$row[$i]['rating']."</small></h4>"."<p style='margin-top: -15; margin-bottom: 40;'>".$row[$i]['review']."</p>";
+                }
             } else {
                 echo "<h1>NO REVIEWS POSTED YET!</h1>";
             }
@@ -817,7 +855,21 @@ if (isset($_REQUEST['q'])) {
             if ($yes == 1) echo $result;
 
             if ($yes != 1) {
-                
+                $str     = "SELECT * from restaurants WHERE name LIKE '%".$_REQUEST["val"]."%' AND `restaurants`.`valid` = 'Y' ;";
+                $res     = mysqli_query($con, $str);
+                $name    = "";
+                $cuisine = "";
+                $count   = "";
+                $result  = "";
+                for ($i = 0; $i < mysqli_num_rows($res); $i++) {
+                    $row[$i] = mysqli_fetch_array($res);
+                    $result  = $result .'<div class="search-result">'."<a href="."res_prof2.php?RES_ID=".$row[$i]['res_id'].">".$row[$i]['name']."</a>".'</div>';
+                }
+                if ($result == "") {
+                    echo "</br> No Result Found </br>";
+                } else {
+                    echo $result;
+                }
             }
             echo "<hr><strong style='font-size: 18px;'>REVIEWERS</strong>";
             $str     = "SELECT * from reviewer WHERE name LIKE '%".$_REQUEST["val"]."%' AND `reviewer`.`valid` = 'Y' ;";
@@ -862,7 +914,11 @@ if (isset($_REQUEST['q'])) {
                         echo "
                         <h3>".$row[$i]['rev_username']."&nbsp; &nbsp;
                             <small style='font-size: 13px;'>".$row[$i]['date']."</small>
-                        
+                        </h3>"."
+                        <h4 style='margin-top: -15;'>Review:
+                            <small style='font-size: 20px; color: ".$col."'>".$row[$i]['rating']."</small>
+                        </h4>"."
+                        <p style='margin-left: 0; margin-top: -10; margin-bottom: 35;'>".$row[$i]['review']."</p>";
 
                     }
             }
@@ -942,13 +998,21 @@ if (isset($_REQUEST['q'])) {
             $res  = mysqli_query($con, $QBAD);
             $bad = mysqli_num_rows($res);
 
-            
+            $QAVG = "SELECT rating from reviews WHERE rating='AVERAGE' AND res_id='".$_REQUEST['id']."' AND approval='Y';";
+            $res  = mysqli_query($con, $QAVG);
+            $avg = mysqli_num_rows($res);
+
+            echo $total."#".$good."#".$bad."#".$avg;
         }
     }
 }
 
 // POSTING A REVIEW
 if (isset($_POST['PRSubmit'])) {
+    $con = mysqli_connect("localhost","root","","restaurant_system");
+    $qX  = "INSERT INTO `reviews`(`rating`, `res_id`, `rev_username`, `restaurant`, `review`) VALUES ('".$_POST['RATING']."', '".$_SESSION['REVIEW_OF_RES_ID']."', '".$_SESSION['username']."', '".$_SESSION['REVIEW_OF_RES_NAME']."', '".$_POST['input_review']."');";
+
+    mysqli_query($con, $qX);
     header('location: res_prof2.php?RES_ID='.$_SESSION['REVIEW_OF_RES_ID'].'&RES_NAME='.$_SESSION['REVIEW_OF_RES_NAME']);
 }
 
