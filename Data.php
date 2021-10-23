@@ -14,7 +14,7 @@
             }
             else
             {
-                
+                $str="SELECT * from reviewer ;";
                 $res=mysqli_query($con,$str);
                 
                 if(mysqli_num_rows($res)==0)
@@ -136,9 +136,43 @@
                 $str="SELECT * from reviews WHERE `reviews`.`approval` = 'X' ;";
                 $res=mysqli_query($con,$str);
                 
-                
+                if(mysqli_num_rows($res)==0)
+                {
+                    echo "<tr>";
+                    echo "<td align="."right".">No Data Available</td>";
+                    echo "</tr>";
+                }
+                else
+                {
+                    $str="SELECT * from reviews WHERE `reviews`.`approval` = 'X' ;";
+                    $res=mysqli_query($con,$str);
+                    $revid="";
+                    $revusername="";
+                    $resid="";
+                    $time="";
+                    $rating="";
+                    $res_name="";
+                    $des="";
+                    
+                    echo "
+                    <tr>
+                                <th>Review ID</th>
+                                <th>Reviewer User Name</th>
+                                <th>Restaurant Name</th>
+                                <th>Rating</th>
+                                <th>Description</th>
+                                <th>Time</th>
+                                <th>Operation</th>
+                    </tr> " ;
+
                     for($i=0;$i<mysqli_num_rows($res);$i++)
                     {
+                        $row[$i]=mysqli_fetch_array($res);
+                        $revid="<br/>".$row[$i]['review_id'];
+                        $resid=$row[$i]['res_id'];
+                        $revusername="<br/>".$row[$i]['rev_username'];
+                        $res_name=$row[$i]['restaurant'];
+                        
                         $rating="<br/>".$row[$i]['rating'];
                         $des="<br/>".$row[$i]['review'];
                         $time="<br/>".$row[$i]['date'];
@@ -187,7 +221,16 @@
                     $posrev="";
                     $negrev="";
                     $avgrev="";
-                    
+                    echo "
+                    <tr>
+                                <th>Restaurant ID</th>
+                                <th>Restaurant Name</th>
+                                <th>Cuisine</th>
+                                <th>Posotive Review</th>
+                                <th>Negative Review</th>
+                                <th>Average Review</th>
+                                <th>Operation</th>
+                    </tr> " ;
 
                     for($i=0;$i<mysqli_num_rows($res);$i++)
                     {
@@ -249,13 +292,24 @@
                         $nres=mysqli_query($con,$n);
                         $negrev=mysqli_num_rows($nres);   
 
+                        $a="SELECT * from reviews WHERE `reviews`.`res_id` = '".$row[$i]['res_id']."' AND `reviews`.`rating`= 'AVERAGE' AND `reviews`.`approval`='Y';";
+                        $ares=mysqli_query($con,$a);
+                        $avgrev=mysqli_num_rows($ares);
+
                         //$posrev="<br/>".$row[$i]['pos_rev'];
                         //$negrev="<br/>".$row[$i]['neg_rev'];
                         //$avgrev="<br/>".$row[$i]['avg_rev'];
 
                         echo "<tr>";
                         echo "<td>$resid </td>";
-                       
+                        echo "<td>$resname</td>";
+                        echo "<td>$cuisine</td>";
+                        echo "<td class="."rev".">$posrev</td>";
+                        echo "<td class="."rev".">$negrev</td>";
+                        echo "<td class="."rev".">$avgrev</td>";
+                        echo "<td> <a class="."UBbtt"." href="."operation.php?res=".$row[$i]['res_id']."&com="."unban". ">  UnBan  </a>  </td>";  
+                        echo "</tr>";
+                    }
                 }
             }
 
