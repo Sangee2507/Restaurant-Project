@@ -63,6 +63,18 @@
         <div class="header-right">
             <?php
                 if (isset($_SESSION['loggedIn'])) {
+                    if ($_SESSION['loggedIn'] == 1) {
+                        echo '<a href="#home">HOME</a>
+                              <a href="rev_prof.php">PROFILE</a>
+                              <a href="validate.php?q=logout">LOG OUT</a>';
+                    } else if ($_SESSION['loggedIn'] == 2) {
+                        echo '<a href="#home">HOME</a>
+                              <a href="res_prof.php">PAGE</a>
+                              <a href="validate.php?q=logout">LOG OUT</a>';
+                    } else {
+                        echo '<a href="login.php">SIGN IN</a>
+                              <a href="opt_reg.php">SIGN UP</a>';
+                    }
                 } else {
                     echo '<a href="login.php">SIGN IN</a>
                           <a href="opt_reg.php">SIGN UP</a>';
@@ -521,7 +533,11 @@
 
                                             $con = mysqli_connect("localhost","root","","restaurant_system");
                                             $str = "SELECT * FROM location WHERE `location`.`location_id` = '".$_REQUEST['location_id']."' ;";
-                                                
+                                                $res = mysqli_query($con,$str);
+                                                $row=mysqli_fetch_array($res, MYSQLI_ASSOC);
+                                                $lat=$row["latitude"];
+                                                $lng=$row["longitude"];
+
                                                 echo "
                                                 <script>
                                                 var geocoder;
@@ -579,7 +595,23 @@
                                             <h2 align='center'>SERVICE</h2>
                                             <h4 align='center' style='font-weight: normal;'>";
 
-                                                
+                                                if ($_REQUEST['services']=='') echo 'NONE';
+                                                else {
+                                                     echo "<table border=0 style='margin-top: -39px;' id='f_data' class='data' height=200 width=200>
+                                                    <tr>
+                                                        <th>NAME</th>
+                                                    </tr>";
+                                                    $go = explode('%', $_REQUEST['services']);
+                                                    for ($i = 0; $i < count($go); $i++) {
+                                                        echo "<tr>
+                                                            <td>
+                                                                ".$go[$i]."
+                                                            </td>
+
+                                                        </tr>";
+                                                    }
+                                                }
+                                                echo "</h4></div><br><br>";
                                         }
                                         echo "</div>";
     ?>
@@ -630,14 +662,16 @@
         function hide()
         {
             document.getElementById("good").style.display = "none";
-            
+            document.getElementById("avg").style.display = "none";
+            document.getElementById("bad").style.display = "none";
+
             //document.getElementById("good").style.visibility = "hidden";
             //document.getElementById("avg").style.visibility = "hidden";
             //document.getElementById("bad").style.visibility = "hidden";
         }
     </script>
         <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjeDZmz2dgDazm9AadXqbLTUoOw07H0C4"></script>
- 
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjeDZmz2dgDazm9AadXqbLTUoOw07H0C4&callback=initMap"></script>
 </body>
 
 </html>
