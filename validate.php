@@ -702,7 +702,7 @@ if (isset($_REQUEST['q'])) {
                     mysqli_query($con, $query);
                 }
         }
-    } else if ($_REQUEST['q'] == 'edit_Service') { //services
+    } else if ($_REQUEST['q'] == 'edit_Service') {
         $con = mysqli_connect("localhost", "root", "", "restaurant_system");
         if (!$con) {
             die('Could not connect: ' . mysqli_error($con));
@@ -764,11 +764,7 @@ if (isset($_REQUEST['q'])) {
                 $name    = "";
                 $cuisine = "";
                 $count   = "";
-                $result  = "";
-                for ($i = 0; $i < mysqli_num_rows($res); $i++) {
-                    $row[$i] = mysqli_fetch_array($res);
-                    $result  = $result .'<div class="search-result">'."<a href="."res_prof2.php?RES_ID=".$row[$i]['res_id'].">".$row[$i]['name']."</a>".'</div>';
-                }
+                
                 if ($result == "") {
                     echo "</br> No Result Found </br>";
                 } else {
@@ -896,10 +892,6 @@ if (isset($_REQUEST['q'])) {
             $QBAD = "SELECT rating from reviews WHERE rating='BAD' AND res_id='".$_REQUEST['id']."' AND approval='Y';";
             $res  = mysqli_query($con, $QBAD);
             $bad = mysqli_num_rows($res);
-
-            $QAVG = "SELECT rating from reviews WHERE rating='AVERAGE' AND res_id='".$_REQUEST['id']."' AND approval='Y';";
-            $res  = mysqli_query($con, $QAVG);
-            $avg = mysqli_num_rows($res);
 
             echo $total."#".$good."#".$bad."#".$avg;
         }
