@@ -906,7 +906,6 @@ if (isset($_REQUEST['q'])) {
     }
 }
 
-// POSTING A REVIEW
 if (isset($_POST['PRSubmit'])) {
     $con = mysqli_connect("localhost","root","","restaurant_system");
     $qX  = "INSERT INTO `reviews`(`rating`, `res_id`, `rev_username`, `restaurant`, `review`) VALUES ('".$_POST['RATING']."', '".$_SESSION['REVIEW_OF_RES_ID']."', '".$_SESSION['username']."', '".$_SESSION['REVIEW_OF_RES_NAME']."', '".$_POST['input_review']."');";
