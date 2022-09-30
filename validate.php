@@ -65,65 +65,6 @@ function dobValidation($dd, $mm, $yy, $who) {
     }
 }
 
-function emailValidation($s, $who) {
-    if (filter_var($s, FILTER_VALIDATE_EMAIL)) {
-        ////
-    } else {
-        $_SESSION[$who] .= ('\n'."EMAIL - Wrong email format.");
-    }
-}
-
-function passwordValidation($s, $who) {
-    // Checking format
-    $c = 0;
-    $n = 0;
-    $m = 0;
-    for ($i = 0; $i < strlen($s); $i++) {
-        if ($s[$i] >= 'a' and $s[$i] <= 'z') $c = 1;
-        else if ($s[$i] >= 'A' and $s[$i] <= 'Z') $c = 1;
-        else if ($s[$i] >= '1' and $s[$i] <= '9') $n = 1;
-        else if ($s[$i] == '@' or $s[$i] == '#' or $s[$i] == '$' or $s[$i] == '%') $m++;
-    }
-    if ($m == 0) {
-        $_SESSION[$who] .= ('\n'."PASSWORD - Must contain atleast one speacial character. (@ # $ %)");
-    }
-}
-
-function pictureValidation($who) {
-    // Stuff we need to validate file and store in a location
-    $fileName = $_FILES['file']['name'];
-    $fileSize = $_FILES['file']['size'];
-    $fileError = $_FILES['file']['error'];
-    $fileTempName = $_FILES['file']['tmp_name'];
-    $fileExtension = explode('.', $fileName);
-    $fileExtension = strtolower(end($fileExtension));
-    $allowedFileTypes = array('jpg', 'jpeg', 'png');
-
-    if ($fileSize == 0) {
-        return;
-    } else {
-        if (in_array($fileExtension, $allowedFileTypes)) {
-            if ($fileError == 0) {
-                if ($fileSize <= 4194304) {
-                    // new name for the file
-                    $fileNewName = uniqid('', true).".".$fileExtension;
-                    // delete the old profile picture
-                    if ($who == "RVproblem" and $_SESSION['pic'] != "upload/def.png") unlink($_SESSION['pic']);
-                    if ($who == "RSproblem" and $_SESSION['pic'] != "upload/res_def.png") unlink($_SESSION['pic']);
-                    // move new picture to the upload folder
-                    $_SESSION['pic'] = $fileNewDest = 'upload/'.$fileNewName;
-                    move_uploaded_file($fileTempName, $fileNewDest);
-                } else {
-                    $_SESSION[$who] .= ('\n'."PICTURE - File size exceeds the limit (4 MB max).");
-                }
-            } else {
-                $_SESSION[$who] .= ('\n'."PICTURE - File is broken.");
-            }
-        } else {
-            $_SESSION[$who] .= ('\n'."PICTURE - Invalid file type.");
-        }
-    }
-}
 
 // REVIEWER / RESTAURANT PAGE LOGIN
 if (isset($_POST['LGSubmit'])) {
@@ -302,31 +243,6 @@ if (isset($_POST['SDVerf'])) {
     } else {
         $_SESSION['f_success'] = "failed";
         header("location: forgot.php");
-    }
-}
-
-// CHANGING PASSWORD
-if (isset($_POST['RSConfirm'])) {
-    //passwordValidation($_POST['pass']);
-    $con = mysqli_connect("localhost", "root", "", "restaurant_system");
-    if (!$con) {
-        die("Connection Error :".mysqli_connect_error());
-    } else {
-        $q1 = "SELECT * FROM reviewer WHERE email= '".$_SESSION['recmail']."';";
-        // searching in reviwer table
-        $result = mysqli_query($con, $q1);
-        if (mysqli_num_rows($result) > 0) {
-            $q1 = "UPDATE `reviewer` SET `password`= '".$_POST['pass']."' WHERE email = '".$_SESSION['recmail']."'";
-        } else {
-            $q1 = "UPDATE `restaurants` SET `password`= '".$_POST['pass']."' WHERE email = '".$_SESSION['recmail']."'";
-        }
-        // update password
-        if (mysqli_query($con, $q1)) {
-            $_SESSION['f_success'] = "DONE BABAY!";
-            header("location: forgot.php?q=success");
-        } else {
-            header("location: forgot.php");
-        }
     }
 }
 
@@ -641,18 +557,6 @@ if (isset($_POST['FOOD_ADD'])) {
 }
 
 if (isset($_POST['ADD_SERVICE'])) {
-    $con = mysqli_connect("localhost","root","","restaurant_system");
-
-    if ($_SESSION['services'] != "") {
-        $go = explode('%', $_SESSION['services']);
-        for ($i = 0; $i < count($go); $i++) {
-            if ($_POST['ServiceName'] == $go[$i]) {
-                header("location: res_prof.php?q=rs_edit#SERVICE");
-                exit();
-            }
-        }
-        $_POST['ServiceName'] = $_SESSION['services']."%".$_POST['ServiceName'];
-    }
 
     $qX  = "UPDATE `restaurants` SET `services` = '".$_POST['ServiceName']."' where res_id = '".$_SESSION['res_id']."';";
 
@@ -879,11 +783,6 @@ if (isset($_REQUEST['q'])) {
             $count   = "";
             $reve    = "";
 
-            for($i=0;$i<mysqli_num_rows($res);$i++)
-            {
-                $row[$i]=mysqli_fetch_array($res);
-                $reve = $reve .'<div class="search-result">'."<a href="."rev2_prof.php?UN=".$row[$i]['rev_username'].">".$row[$i]['name']."</a>".'</div>';
-            }
             if($reve=="")
             {
                 echo "</br> No Result Found </br>";
